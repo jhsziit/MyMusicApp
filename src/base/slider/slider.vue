@@ -3,13 +3,22 @@
     <div class="slider-group" ref="sliderGroup">
       <slot></slot>
     </div>
-    <div class="dots"></div>
+    <div class="dots">
+      <span class="dot" v-for="(item, index) in dots" :key="index" :class="{active:currentPageIndex === index}"></span>
+    </div>
   </div>
 </template>
 
 <script>
 import BScroll from "better-scroll";
+import { addClass } from "common/js/dom";
 export default {
+  data() {
+    return {
+      dots: [],
+      currentPageIndex: 0
+    };
+  },
   props: {
     loop: {
       type: Boolean,
@@ -27,15 +36,76 @@ export default {
   mounted() {
     setTimeout(() => {
       this._setSliderWidth();
+      this._initDots();
       this._initSlider();
-    }, 20);
+
+      if (this.autoPlay) {
+        this._play();
+      }
+    }, 20)
+
+    window.addEventListener('resize', () => {
+      if (!this.slider) {
+        return ;
+      }
+      this._setSliderWidth(true);
+      this.slider.refresh();
+    })
   },
   methods: {
-    _setSliderWidth() {
+    _setSliderWidth(isResize) {
       this.children = this.$refs.sliderGroup.children;
+
       let width = 0;
+      let sliderWidth = this.$refs.slider.clientWidth;
+      for (let i = 0; i < this.children.length; i++) {
+        let child = this.children[i];
+        addClass(child, "slider-item");
+        child.style.width = sliderWidth + "px";
+        width += sliderWidth;
+      }
+      //第一次执行_setSliderWidth,还未初始化BScroll,只有五张图,需要算上clone的两张图宽度
+      //在resize执行_setSliderWidth时,已经初始化BScroll,已经有七张图,不再需要加上2 * sliderWidth
+      if (this.loop && !isResize) { 
+        width += 2 * sliderWidth;
+      }
+
+      this.$refs.sliderGroup.style.width = width + "px";
     },
-    _initSlider() {}
+    _initDots() {
+      this.dots = new Array(this.children.length);
+    },
+    _initSlider() {
+      this.slider = new BScroll(this.$refs.slider, {
+        scrollX: true,
+        scrollY: false,
+        momentum: false,
+        snap: {
+          loop: this.loop,
+          threshold: 0.3,
+          speed: 400
+        }
+      });
+
+      this.slider.on('scrollEnd', () => {
+        let pageIndex = this.slider.getCurrentPage().pageX;
+        this.currentPageIndex = pageIndex;
+
+        if (this.autoPlay) {
+          this._play();
+        }
+      })
+    },
+    _play() {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
+        this.slider.next();
+      },this.interval)
+    }
+  },
+  destroyed() {
+    clearTimeout(this.timer);
+    this.timer = null
   }
 };
 </script>
@@ -63,25 +133,25 @@ export default {
         width: 100%;
       }
     }
-    .dots {
-      position: absolute;
-      right: 0;
-      left: 0;
-      bottom: 12px;
-      text-align: center;
-      font-size: 0;
-      .dot {
-        display: inline-block;
-        margin: 0 4px;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: $color-text-l;
-        &:active {
-          width: 20px;
-          border-radius: 5px;
-          background: $color-text-ll;
-        }
+  }
+  .dots {
+    position: absolute;
+    right: 0;
+    left: 0;
+    bottom: 12px;
+    text-align: center;
+    font-size: 0;
+    .dot {
+      display: inline-block;
+      margin: 0 4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: $color-text-l;
+      &.active {
+        width: 20px;
+        border-radius: 5px;
+        background: $color-text-ll;
       }
     }
   }
