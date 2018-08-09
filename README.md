@@ -1,2 +1,2 @@
-# MyMusicApp
+# jh~Music
 A Music App
