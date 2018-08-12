@@ -106,7 +106,7 @@ export default {
       .item {
         display: flex;
         box-sizing: border-box;
-        text-align: center;
+        align-items: center;
         padding: 0 20px 20px 20px;
         .icon {
           flex: 0 0 60px;
@@ -118,7 +118,7 @@ export default {
           flex-direction: column;
           justify-content: center;
           flex: 1;
-          linh-height: 20px;
+          line-height: 20px;
           overflow: hidden;
           font-size: $font-size-medium;
           .name {
