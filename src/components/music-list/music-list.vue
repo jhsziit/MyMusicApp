@@ -3,7 +3,7 @@
     <div class="back" @click="back">
       <i class="icon-back"></i>
     </div>
-    <h1 class="title" v-html="title"></h1>
+    <h1 class="title">{{title}}</h1>
     <div class="bg-image" :style="bgStyle" ref="bgImage">
       <div class="filter" ref="filter"></div>
       <div class="play-wrapper">
@@ -17,7 +17,7 @@
     <scroll :probe-type="probeType" :listen-scroll="listenScroll" @scroll="scroll" :data="songs" class="list"
             ref="list">
       <div class="song-list-wrapper">
-        <song-list :songs="songs"></song-list>
+        <song-list :songs="songs" @select="selectItem"></song-list>
       </div>
       <div v-show="!songs.length" class="loading-container">
         <loading></loading>
@@ -29,9 +29,9 @@
 <script>
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
-
   import SongList from 'base/song-list/song-list'
   import {prefixStyle} from "common/js/dom";
+  import {mapActions} from 'vuex'
 
   const RESERVED_HEIGHT = 40
   const transform = prefixStyle('transform')
@@ -47,9 +47,7 @@
       },
       songs: {
         type: Array,
-        default: function () {
-          return []
-        }
+        default: () => []
       },
       title: {
         type: String,
@@ -76,12 +74,21 @@
       this.$refs.list.$el.style.top = `${this.imageHeight}px`
     },
     methods: {
+      selectItem(item, index) {
+        this.selectPlay({
+          list: this.songs,
+          index
+        })
+      },
       scroll(pos) {
         this.scrollY = pos.y
       },
       back() {
         this.$router.back()
-      }
+      },
+      ...mapActions([
+        'selectPlay'
+      ])
     },
     watch: {
       scrollY(newY) {
@@ -175,7 +182,7 @@
       .play-wrapper {
         position: absolute;
         bottom: 20px;
-        z-index: 50px;
+        z-index: 50;
         width: 100%;
         .play {
           box-sizing: border-box;
